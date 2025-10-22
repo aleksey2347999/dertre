@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SWILL Casino</title>
+    <meta charset="utf-8">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .balance {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-section {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .slot-machine {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .slot {
+            height: 80px;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: black;
+        }
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            width: 100%;
+        }
+        button:hover {
+            background: #c0392b;
+        }
+        .result {
+            text-align: center;
+            font-size: 18px;
+            margin: 10px 0;
+            min-height: 30px;
+        }
+        .bet-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .bet-amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="balance">
+            <h2>Баланс: <span id="balance">1000</span> ₽</h2>
+        </div>
+
+        <div class="game-section">
+            <h3>Игровые автоматы</h3>
+            <div class="slot-machine">
+                <div class="slot" id="slot1">🍒</div>
+                <div class="slot" id="slot2">🍋</div>
+                <div class="slot" id="slot3">🍊</div>
+            </div>
+            
+            <div class="bet-controls">
+                <button onclick="changeBet(-10)">-10</button>
+                <div class="bet-amount">Ставка: <span id="betAmount">50</span> ₽</div>
+                <button onclick="changeBet(10)">+10</button>
+            </div>
+
+            <button onclick="spinSlots()">КРУТИТЬ</button>
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="game-section">
+            <h3>Быстрые игры</h3>
+            <button onclick="playCoinFlip()">Орёл/Решка (x2)</button>
+            <button onclick="playDice()">Кости (x3)</button>
+            <button onclick="playRoulette()">Рулетка (x36)</button>
+        </div>
+
+        <div class="game-section">
+            <h3>Пополнение счёта</h3>
+            <button onclick="addFunds(100)">+100 ₽</button>
+            <button onclick="addFunds(500)">+500 ₽</button>
+            <button onclick="addFunds(1000)">+1000 ₽</button>
+        </div>
+    </div>
+
+    <script>
+        let balance = 1000;
+        let currentBet = 50;
+        const symbols = ['🍒', '🍋', '🍊', '⭐', '💎', '7️⃣'];
+
+        function updateDisplay() {
+            document.getElementById('balance').textContent = balance;
+            document.getElementById('betAmount').textContent = currentBet;
+        }
+
+        function changeBet(amount) {
+            currentBet += amount;
+            if (currentBet < 10) currentBet = 10;
+            if (currentBet > balance) currentBet = balance;
+            updateDisplay();
+        }
+
+        function spinSlots() {
+            if (balance < currentBet) {
+                document.getElementById('result').textContent = "Недостаточно средств!";
+                return;
+            }
+
+            balance -= currentBet;
+            updateDisplay();
+
+            // Анимация вращения
+            const slots = ['slot1', 'slot2', 'slot3'];
+            let spins = 0;
+            const maxSpins = 20;
+            
+            const spinInterval = setInterval(() => {
+                slots.forEach(slotId => {
+                    const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+                    document.getElementById(slotId).textContent = randomSymbol;
+                });
+                
+                spins++;
+                if (spins >= maxSpins) {
+                    clearInterval(spinInterval);
+                    showResult();
+                }
+            }, 100);
+        }
+
+        function showResult() {
+            const slot1 = document.getElementById('slot1').textContent;
+            const slot2 = document.getElementById('slot2').textContent;
+            const slot3 = document.getElementById('slot3').textContent;
+            
+            let winAmount = 0;
+            
+            if (slot1 === slot2 && slot2 === slot3) {
+                if (slot1 === '7️⃣') winAmount = currentBet * 10;
+                else if (slot1 === '💎') winAmount = currentBet * 5;
+                else winAmount = currentBet * 3;
+            } else if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
+                winAmount = currentBet * 2;
+            }
+            
+            if (winAmount > 0) {
+                balance += winAmount;
+                document.getElementById('result').textContent = `ПОБЕДА! +${winAmount} ₽`;
+            } else {
+                document.getElementById('result').textContent = "ПРОИГРЫШ";
+            }
+            
+            updateDisplay();
+        }
+
+        function playCoinFlip() {
+            if (balance < currentBet) {
+                document.getElementById('result').textContent = "Недостаточно средств!";
+                return;
+            }
+
+            balance -= currentBet;
+            const win = Math.random() > 0.45; // 55% шанс на победу
+            if (win) {
+                const winAmount = currentBet * 2;
+                balance += winAmount;
+                document.getElementById('result').textContent = `Выигрыш! +${winAmount} ₽`;
+            } else {
+                document.getElementById('result').textContent = "Проигрыш";
+            }
+            updateDisplay();
+        }
+
+        function playDice() {
+            if (balance < currentBet) {
+                document.getElementById('result').textContent = "Недостаточно средств!";
+                return;
+            }
+
+            balance -= currentBet;
+            const playerRoll = Math.floor(Math.random() * 6) + 1;
+            const houseRoll = Math.floor(Math.random() * 6) + 1;
+            
+            if (playerRoll > houseRoll) {
+                const winAmount = currentBet * 3;
+                balance += winAmount;
+                document.getElementById('result').textContent = `Выигрыш! ${playerRoll} vs ${houseRoll} +${winAmount} ₽`;
+            } else {
+                document.getElementById('result').textContent = `Проигрыш ${playerRoll} vs ${houseRoll}`;
+            }
+            updateDisplay();
+        }
+
+        function playRoulette() {
+            if (balance < currentBet) {
+                document.getElementById('result').textContent = "Недостаточно средств!";
+                return;
+            }
+
+            balance -= currentBet;
+            const winNumber = Math.floor(Math.random() * 37);
+            const playerNumber = Math.floor(Math.random() * 37);
+            
+            if (winNumber === playerNumber) {
+                const winAmount = currentBet * 36;
+                balance += winAmount;
+                document.getElementById('result').textContent = `ДЖЕКПОТ! ${winNumber} +${winAmount} ₽`;
+            } else {
+                document.getElementById('result').textContent = `Выпало: ${winNumber}, ваше: ${playerNumber}`;
+            }
+            updateDisplay();
+        }
+
+        function addFunds(amount) {
+            balance += amount;
+            updateDisplay();
+            document.getElementById('result').textContent = `Счёт пополнен на ${amount} ₽`;
+        }
+
+        // Инициализация Telegram Web App
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        
+        updateDisplay();
+    </script>
+</body>
+</html>
